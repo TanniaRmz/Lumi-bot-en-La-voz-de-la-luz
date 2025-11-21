@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lumi-Bot | Alumbrado Público</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        /* --- ESTILOS CSS --- */
+        
+        /* === FONDO EXTERIOR (BODY) === */
+        body {
+            font-family: Arial, sans-serif;
+            background-image: url('Fondo animado.avif'); 
+            background-size: cover; 
+            background-position: center; 
+            background-attachment: fixed; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            overflow: hidden; /* Oculta el scroll durante la carga */
+        }
+
+        /* === PANTALLA DE CARGA (SPLASH SCREEN) === */
+        #splash-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #128c7e; /* Color primario del bot */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease-out;
+        }
+
+        #splash-screen img {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+            animation: bounce 1s infinite alternate;
+        }
+        
+        #splash-screen h1 {
+            color: white;
+            font-size: 2em;
+            margin-bottom: 5px;
+        }
+
+        #splash-screen p {
+            color: #dcf8c6;
+            font-size: 1em;
+        }
+
+        /* Animación del logo */
+        @keyframes bounce {
+            from {
+                transform: scale(1);
+            }
+            to {
+                transform: scale(1.05);
+            }
+        }
+        
+        /* === CONTENEDOR DEL CHAT (CHAT CONTAINER) === */
+        .chat-container {
+            width: 100%;
+            max-width: 420px;
+            height: 80vh;
+            max-height: 700px;
+            background-color: #f7f7f7; 
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative; 
+            opacity: 0; /* Oculto al inicio */
+            transition: opacity 0.5s ease-in;
+        }
+
+        /* === ESTILOS DEL CHAT (RESTO) === */
+        .chat-header {
+            background-color: #128c7e;
+            color: white;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .header-avatar {
+            background-color: #f0f0f0;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-right: 10px;
+            overflow: hidden;
+        }
+
+        .header-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .header-info h3 {
+            margin: 0;
+            font-size: 1.1em;
+        }
+
+        .header-info p {
+            margin: 0;
+            font-size: 0.8em;
+            opacity: 0.8;
+        }
+
+        .chat-body {
+            flex-grow: 1;
+            padding: 10px;
+            overflow-y: auto;
+            background-image: url('Luminarias aguascalientes.jpeg'); 
+            background-size: cover; 
+            background-position: center; 
+            background-color: #e5ddd5; 
+            display: flex;
+            flex-direction: column;
+        }
+
+        .message-bubble {
+            max-width: 80%;
+            padding: 8px 12px;
+            border-radius: 18px;
+            margin-bottom: 8px;
+            line-height: 1.4;
+            position: relative;
+            word-wrap: break-word;
+        }
+
+        .bot-message {
+            background-color: #ffffff; 
+            align-self: flex-start;
+            border-bottom-left-radius: 2px;
+            box-shadow: 0 1px 0.5px rgba(0, 0, 0, 0.13);
+        }
+
+        .user-message {
+            background-color: #dcf8c6; 
+            align-self: flex-end;
+            border-bottom-right-radius: 2px;
+            box-shadow: 0 1px 0.5px rgba(0, 0, 0, 0.13);
+        }
+
+        .message-time {
+            display: block;
+            font-size: 0.65em;
+            color: #777;
+            text-align: right;
+            margin-top: 5px;
+            line-height: 1;
+        }
+        
+        .message-image-container {
+            max-width: 100%;
+            margin-bottom: 5px;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .message-image {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .chat-footer {
+            padding: 8px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+        }
+
+        .chat-footer input[type="text"] {
+            flex-grow: 1;
+            border: none;
+            padding: 12px 15px;
+            border-radius: 20px;
+            font-size: 1em;
+            margin: 0 8px;
+            box-shadow: 0 1px 0.5px rgba(0, 0, 0, 0.13);
+        }
+
+        .chat-footer button {
+            background-color: #128c7e;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 44px;
+            height: 44px;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0 4px;
+            transition: background-color 0.3s;
+        }
+
+        .chat-footer button:hover {
+            background-color: #0e6c60;
+        }
+
+        #attach-button {
+            background-color: transparent;
+            color: #777;
+            width: 44px;
+            height: 44px;
+            margin-left: 4px;
+        }
+        
+        #attach-button:hover {
+            color: #555;
+            background-color: transparent;
+        }
+
+        #attach-button .material-icons {
+            transform: rotate(45deg); 
+        }
+
+        #report-button {
+            position: absolute;
+            top: 15px; 
+            right: 15px; 
+            background-color: #dc3545; 
+            color: white;
+            border: none;
+            border-radius: 8px; 
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            transition: background-color 0.3s;
+            z-index: 10; 
+        }
+
+        #report-button:hover {
+            background-color: #c82333; 
+        }
+
+        #report-button .material-icons {
+            font-size: 24px; 
+        }
+    </style>
+</head>
+<body>
+
+    <div id="splash-screen">
+        <img src="Logo alumbrado publico cute.jpg" alt="Logo Lumi-Bot">
+        <h1>Lumi-Bot</h1>
+        <p>Iniciando servicio de alumbrado...</p>
+    </div>
+
+    <div class="chat-container" id="chat-container">
+        
+        <button id="report-button" onclick="startQuickReport()">
+            <span class="material-icons">lightbulb_outline</span> 
+        </button>
+
+        <div class="chat-header">
+            <div class="header-avatar">
+                <img src="Logo alumbrado publico cute.jpg" alt="Lumi-Bot Logo">
+            </div>
+            <div class="header-info">
+                <h3>Lumi-Bot</h3>
+                <p>Alumbrado Público | La voz de la luz</p>
+            </div>
+        </div>
+
+        <div class="chat-body" id="chat-body">
+            </div>
+
+        <div class="chat-footer">
+            <button id="attach-button" onclick="document.getElementById('file-input').click();">
+                <span class="material-icons">attach_file</span>
+            </button>
+
+            <input type="file" id="file-input" accept="image/*" style="display: none;">
+
+            <input type="text" id="user-input" placeholder="Escribe tu pregunta o reporte..." onkeypress="handleKeyPress(event)">
+
+            <button onclick="sendMessage()">
+                <span class="material-icons">send</span>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // --- LÓGICA JAVASCRIPT ---
+        const chatContainer = document.getElementById('chat-container');
+        const chatBody = document.getElementById('chat-body');
+        const userInput = document.getElementById('user-input');
+        const fileInput = document.getElementById('file-input');
+        const splashScreen = document.getElementById('splash-screen');
+        const CHAT_STORAGE_KEY = 'lumi-bot-conversation';
+        const FOLIO_COUNTER_KEY = 'lumi-bot-folio-counter'; 
+        const DEFAULT_RESPONSE = "Lo siento, esa pregunta es nueva para mí. Intenta con **'hola'**, **'reportar'** o **'horario'** para guiarte.";
+
+        // Estado: Almacena temporalmente la ubicación para el reporte
+        let currentReportLocation = null; 
+        
+        // Estado: Indica si el bot está esperando el folio o la dirección del usuario
+        let waitingForFolio = false; 
+
+        // Constante: Mensaje de estado detallado para el seguimiento (PASO 2)
+        const DETAILED_STATUS_MESSAGE = "Estamos dándole seguimiento a todas las solicitudes. Actualmente, tu reporte se encuentra en estado de **Verificación en Campo** o **Reparación Activa**.\n\nRecuerda que si ves una 'X' con cinta negra en la base, significa que fue **diagnosticada** y está en la lista de reparaciones prioritarias. ¡El tiempo de atención es de 24 a 72 horas hábiles!";
+
+        // --- OBJETO DE RESPUESTAS PERSONALIZADAS ---
+        const RESPUESTAS = {
+            "hola": {
+                "variantes": ["hola", "holaaaa", "olis", "oli", "ola", "wenas", "buenos días", "buenas tardes"],
+                "respuesta": "¡Hola! Soy **Lumi-Bot**, tu asistente para Alumbrado Público. ¿En qué puedo ayudarte hoy?"
+            },
+            "quién eres": {
+                "variantes": ["quién eres", "quien eres", "qué eres", "que eres"],
+                "respuesta": "Soy un Chat-Bot diseñado para darte información y ayudarte a gestionar reportes del área de Alumbrado Público. **¡Mi misión es que tu calle brille!**"
+            },
+            "qué haces": {
+                "variantes": ["qué haces", "que haces", "a qué te dedicas"],
+                "respuesta": "Puedo responder dudas sobre reportes, servicios y horarios. Si quieres reportar una falla puedes escribir **'Reportar'** o si quieres saber del estado de tu reporte escribe **'Seguimiento'**."
+            },
+            "reportar": {
+                "variantes": ["cómo reporto una falla", "como reporto una falla", "quiero reportar una falla", "reportar", "reporte rapido"],
+                "respuesta": "¡Entendido! Vamos a generar un **Reporte Rápido**. Primero, necesito tu ubicación. El sistema ha solicitado permiso para usar tu GPS. Por favor, **acepta la solicitud de ubicación** que aparece en tu navegador.\n\nSi ya lo hiciste, por favor, envía un mensaje con la **dirección exacta** (calle, número) y adjunta una **foto** (opcional)."
+            },
+            "dónde puedo reportar": {
+                "variantes": ["dónde puedo reportar", "donde puedo reportar", "en dónde reporto"],
+                "respuesta": "Puedes reportar directamente aquí con Lumi-Bot, o si quieres hacerlo directo puedes llamar al número oficial, hasta incluso puedes hacer tu reporte mas facil dentro del linnk Alumbrado."
+            },
+            "horario": {
+                "variantes": ["cuál es tu horario", "cual es tu horario", "horario de atención", "horario", "cual es el horario de alumbrado publico", "cual es el horario"],
+                "respuesta": "El horario de atención de Alumbardo Publico es de **Lunes a Domingo** y circulamos las **24 horas**."
+            },
+            "gracias": {
+                "variantes": ["gracias", "muchas gracias", "te agradezco", "thanks", "thankos", "excelente dia"],
+                "respuesta": "¡De nada! Es un placer iluminar tu camino. "
+            },
+            "numero": {
+                "variantes": ["numero", "¿cual es el numero para reportar?", "cual es el numero", "cual es el numero para reportar"],
+                "respuesta": "El número oficial para reportes es el **072**. ¡Guárdalo! O si tienes problemas puedes llamar también a este número **449 910 1019**."
+            },
+            "tiempo de reparacion": {
+                "variantes": ["tiempo de reparacion", "cuanto tardan", "cuanto tardan para reparar mi luminaria", "cuanto tardan para que hagan mi reporte", "cuanto se tarda el reporte"],
+                "respuesta": "El tiempo estimado de reparación suele ser de **24 a 72 horas hábiles** después del reporte formal."
+            },
+            "link": {
+                "variantes": ["cual link hablas", "cual es el link", "link", "link de alumbrado"],
+                "respuesta": "Este es el link de reportes:<br> https://jonemoto24.github.io/Alumbrado-publico-de-Aguascalientes/ <br>Este reporte llegara directamente a Alumbrado Publico. "
+            },
+            
+            "estado de reporte": {
+                "variantes": [
+                    "reportes", "quiero saber de mi reporte", "seguimiento", "estado de mi reporte", 
+                    "reporte una lampara pero aun no sirve", "mi lampara aun no funciona", 
+                    "mi lampara esta con una equis, porque?", "la lampara tiene una x con cinta, porque?", 
+                    "la lampara que reporte sigue igual", "equis con cinta"
+                ],
+
+                "respuesta": "INICIAR SEGUIMIENTO: <br>Perfecto, voy a buscar tu reporte. Por favor, indícame tu **número de folio** o la **dirección exacta** que reportaste."
+            },
+            
+            "lamparas nuevas": {
+                "variantes": ["necesito una lampara nueva", "necesitamos que pongan una nueva lampara en esta calle", "quiero una lampara nueva", "quiero un cambio de lampara"],
+                "respuesta": "La instalación de una **nueva luminaria** requiere un proceso formal diferente al de una reparación. Por favor, reporta el punto exacto y revisaremos la solicitud. Puedes hacer tu solicitud con el Reporte Rápido."
+            },
+            "diferencia": {
+                "variantes": ["ustedes que hacen", "exactamente que son?", "diferencia"],
+                "respuesta": "Somos el área de **Alumbrado Público**, encargados del mantenimiento y reparación de las luminarias en las calles para mantener la iluminación y seguridad de nuestra comunidad. **¡Trabajamos por ti!**"
+            },
+            
+            "lampara caida": {
+                "variantes": ["se cayó una lámpara, qué hago", "luminaria tirada", "poste caído", "lampara caida", "tengo una lampara de ustedes", "se a caido una lampara"],
+                "respuesta": "¡Es una emergencia! Por favor, evita o preocura no acercarte por riesgo eléctrico. Repórtalo de inmediato llamando al **072** y reporta aquí la dirección exacta para que el equipo de Alumbrado Público lo gestione."
+            },
+            "falla intermitente": {
+                "variantes": ["la lámpara prende y apaga", "falla intermitente", "parpadea"],
+                "respuesta": "Entendido. Esto es una **falla intermitente**. Por favor, genera un **Reporte Rápido** indicando que la falla es intermitente para que el equipo lleve la refacción correcta."
+            },
+            "fotocelda": {
+                "variantes": ["qué es una fotocelda", "para qué sirve el sensor", "fotocelda"],
+                "respuesta": "La **fotocelda** es el sensor que detecta la luz natural. Su función es encender la lámpara automáticamente cuando oscurece y apagarla cuando amanece. Si tu lámpara está encendida de día, es probable que la fotocelda esté dañada."
+            },
+            "tipo de lamparas": {
+                "variantes": ["qué tipo de lámparas usan", "son LED o las viejas", "tipo de lamparas"],
+                "respuesta": "Actualmente, estamos migrando a tecnología **LED**, ya que es más eficiente y ecológica. Si reportas una lámpara antigua, le daremos prioridad para el reemplazo con tecnología LED."
+            },
+            "colores": {
+                "variantes": ["por qué unas lámparas son amarillas y otras blancas", "lampara amarilla", "lampara blanca"],
+                "respuesta": "Las lámparas **amarillas** son de tecnología antigua. Las **blancas** son la nueva tecnología LED. Todas las lámparas nuevas y las que se reparan se sustituyen por LED blanco para mejorar la visibilidad y la seguridad."
+            },
+            "pago": {
+                "variantes": ["quién paga el alumbrado público", "hay que pagar por reportar", "pago"],
+                "respuesta": "El servicio de alumbrado público se cubre con los impuestos municipales. **Reportar una falla es totalmente gratuito** y es un servicio esencial para la comunidad."
+            },
+            "garantia": {
+                "variantes": ["mi reporte tiene garantía", "si vuelve a fallar", "garantia"],
+                "respuesta": "Sí. Todas las reparaciones y cambios de luminarias cuentan con una garantía de **60 días naturales**. Si la misma lámpara falla dentro de ese período, repórtala de nuevo y la atenderemos de forma inmediata."
+            },
+            "presencia": {
+                "variantes": ["necesito estar en mi casa para que la arreglen", "es en la calle", "presencia"],
+                "respuesta": "No, la reparación se hace directamente en la calle. No es necesario que estés presente. Solo asegúrate de proporcionar la **dirección exacta** y el **número de poste** (si lo tiene) para que el equipo la localice sin problemas."
+            },
+            
+        };
+
+        function getCurrentTime() {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            return `${hours}:${minutes}`;
+        }
+
+        function saveConversation() {
+            // Guardamos solo si la pantalla de carga ya desapareció
+            if (chatContainer.style.opacity === '1') {
+                localStorage.setItem(CHAT_STORAGE_KEY, chatBody.innerHTML);
+            }
+        }
+
+        function appendMessage(text, sender, imageURL = null) {
+            const time = getCurrentTime();
+            const messageDiv = document.createElement('div');
+            const formattedText = text.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            messageDiv.classList.add('message-bubble', sender === 'bot' ? 'bot-message' : 'user-message');
+
+            let contentHTML = '';
+
+            if (imageURL) {
+                contentHTML += `
+                    <div class="message-image-container">
+                        <img src="${imageURL}" alt="Imagen adjunta" class="message-image">
+                    </div>
+                `;
+            }
+
+            contentHTML += `<span>${formattedText}</span>`;
+            contentHTML += `<span class="message-time">${time}</span>`;
+
+            messageDiv.innerHTML = contentHTML;
+            chatBody.appendChild(messageDiv);
+
+            chatBody.scrollTop = chatBody.scrollHeight;
+            saveConversation();
+        }
+
+        function getBotResponse(userText) {
+            const lowerCaseText = userText.toLowerCase().trim();
+
+            // 1. CHEQUEO DE ESTADO: Si estamos esperando el folio (Lógica de 2 pasos)
+            if (waitingForFolio) {
+                if (lowerCaseText.length > 2) { 
+                    waitingForFolio = false; 
+                    return DETAILED_STATUS_MESSAGE; 
+                }
+            }
+            
+            // 2. EMPAREJAMIENTO NORMAL DE PALABRAS CLAVE
+            for (const key in RESPUESTAS) {
+                const item = RESPUESTAS[key];
+                for (const variant of item.variantes) {
+                    if (lowerCaseText.includes(variant.toLowerCase())) {
+                        return item.respuesta;
+                    }
+                }
+            }
+            return DEFAULT_RESPONSE;
+        }
+
+        function processUserMessage(userText) {
+            const botResponse = getBotResponse(userText);
+            
+            // 3. ACTIVACIÓN DEL ESTADO: Si la respuesta contiene el marcador de inicio de seguimiento
+            if (botResponse.startsWith("INICIAR SEGUIMIENTO:")) {
+                waitingForFolio = true;
+                const displayResponse = botResponse.substring("INICIAR SEGUIMIENTO:".length).trim();
+                setTimeout(() => {
+                    appendMessage(displayResponse, 'bot');
+                }, 800);
+            } else {
+                // Para todas las demás respuestas
+                setTimeout(() => {
+                    appendMessage(botResponse, 'bot');
+                }, 800);
+            }
+        }
+
+        function sendMessage() {
+            const userText = userInput.value.trim();
+            const file = fileInput.files[0];
+            let imageURL = null;
+
+            if (!userText && !file) {
+                return;
+            }
+
+            if (file) {
+                imageURL = URL.createObjectURL(file);
+            }
+
+            const messageToSend = userText || '[Imagen de Reporte Adjunta]';
+            appendMessage(messageToSend, 'user', imageURL);
+
+            if (userText || file) {
+                const textToProcess = userText || "quiero reportar una falla"; 
+
+                // LÓGICA DE REPORTE FINAL: Se activa si ya se obtuvo la ubicación y el usuario envía datos.
+                if (currentReportLocation && (textToProcess.length > 10 || file)) { 
+                    const folio = getNextFolio();
+                    const mapLink = `https://www.google.com/maps/search/?api=1&query=${currentReportLocation.latitude},${currentReportLocation.longitude}`;
+
+                    const reportSummary = `
+                        **✅ REPORTE GENERADO CON ÉXITO**
+                        **Folio:** ${folio}
+                        **Ubicación GPS:** [Lat: ${currentReportLocation.latitude.toFixed(5)}, Lon: ${currentReportLocation.longitude.toFixed(5)}](${mapLink})
+                        **Dirección/Descripción:** ${userText || 'Solo se proporcionó ubicación GPS.'}
+                        **Adjunto:** ${file ? 'Sí' : 'No'}
+                        
+                        Tu reporte ha sido registrado. Conserva el **Folio ${folio}** para dar seguimiento. ¡Gracias por ayudarnos a iluminar tu comunidad!
+                    `;
+                    appendMessage(reportSummary, 'bot');
+                    currentReportLocation = null; 
+                } else {
+                    processUserMessage(textToProcess);
+                }
+            }
+
+            userInput.value = '';
+            fileInput.value = ''; 
+        }
+
+        function handleKeyPress(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        }
+        
+        // --- LÓGICA DE INICIO Y SPLASH SCREEN ---
+        
+        function sendBotInitialMessage() {
+            const welcomeMessage = RESPUESTAS["hola"].respuesta + 
+                "<br><br>¿Te gustaría hacer un **Reporte Rápido**? Puedes usar el botón rojo 💡 de arriba, o ¿Tienes una pregunta sobre **Horarios** o **Seguimiento**?";
+                
+            appendMessage(welcomeMessage, 'bot');
+        }
+        
+        function loadConversation() {
+            // Limpiar historial al cargar
+            localStorage.removeItem(CHAT_STORAGE_KEY);
+            chatBody.innerHTML = ''; 
+        }
+
+        /**
+         * Función principal para gestionar la carga y el mensaje de bienvenida.
+         */
+        function initializeApp() {
+            // 1. Limpiar historial y chat
+            loadConversation(); 
+
+            // 2. Establecer el tiempo de duración de la pantalla de carga (2000ms = 2 segundos)
+            const splashDuration = 2000; 
+
+            setTimeout(() => {
+                // 3. Ocultar la pantalla de carga
+                splashScreen.style.opacity = '0';
+                
+                // 4. Mostrar el contenedor del chat
+                chatContainer.style.opacity = '1';
+                
+                // 5. Eliminar la pantalla de carga del DOM después de la transición
+                setTimeout(() => {
+                    splashScreen.style.display = 'none';
+                    // 6. Enviar el primer mensaje del bot
+                    sendBotInitialMessage();
+                }, 500); // 500ms es la duración de la transición CSS
+                
+            }, splashDuration);
+        }
+        
+        // --- LÓGICA DE GPS Y REPORTE (Sin cambios) ---
+        
+        function getNextFolio() {
+            let folio = parseInt(localStorage.getItem(FOLIO_COUNTER_KEY) || '0', 10);
+            folio++;
+            localStorage.setItem(FOLIO_COUNTER_KEY, folio.toString());
+            return `F-${String(folio).padStart(3, '0')}`;
+        }
+
+        function requestLocation() {
+            currentReportLocation = null; 
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        currentReportLocation = {
+                            latitude: position.coords.latitude,
+                            longitude: position.coords.longitude
+                        };
+                        const mapLink = `https://www.google.com/maps/search/?api=1&query=${currentReportLocation.latitude},${currentReportLocation.longitude}`;
+                        
+                        appendMessage(`✅ **Ubicación GPS Obtenida:** Latitud: ${currentReportLocation.latitude.toFixed(5)}, Longitud: ${currentReportLocation.longitude.toFixed(5)}.<br>([Ver en Mapa](${mapLink}))`, 'bot');
+                        
+                        appendMessage(`Ahora, por favor, escribe la **dirección exacta** (calle, número, colonia) y adjunta una **foto** (opcional).`, 'bot');
+                    },
+                    (error) => {
+                        let errorMessage = 'No fue posible obtener tu ubicación GPS.';
+                        if (error.code === error.PERMISSION_DENIED) {
+                            errorMessage += '<br>Necesitas aceptar el permiso de ubicación.';
+                        } else {
+                            errorMessage += `<br>Error: ${error.message}`;
+                        }
+                        appendMessage(`⚠️ **Alerta:** ${errorMessage}<br>Por favor, proporciona la dirección exacta manualmente.`, 'bot');
+                    },
+                    { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+                );
+            } else {
+                appendMessage("⚠️ **Error:** Tu navegador no soporta la geolocalización. Por favor, proporciona la dirección exacta manualmente.", 'bot');
+            }
+        }
+
+        function startQuickReport() {
+            appendMessage("Quiero hacer un Reporte Rápido.", 'user');
+            processUserMessage("reportar");
+            requestLocation(); 
+            userInput.focus();
+        }
+
+        // --- Inicialización: Llama a la nueva función de inicio ---
+        window.onload = initializeApp;
+
+    </script>
+
+</body>
+</html>
